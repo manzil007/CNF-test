@@ -1,0 +1,34 @@
+﻿
+try
+{
+ # User account login 
+            $MyFolder = "C:\Temp"
+            $domain = "hcfsys.local"
+            $userUPN = "hcfsys.local\svcawsadconnector"
+# Define a location to store the AESKey
+            $AESKeyFilePath ="$($MyFolder)\aeskey.txt"
+# Define a location to store the file that hosts the encrypted password
+            $credentialFilePath ="$($MyFolder)\credpassword.txt"
+
+#use key and password to create local secure password
+            $AESKey = Get-Content -Path $AESKeyFilePath 
+            $pwdTxt = Get-Content -Path $credentialFilePath
+            $securePass = $pwdTxt | ConvertTo-SecureString -Key $AESKey 
+
+#create a new psCredential object with required username and password
+            $adminCreds = New-Object System.Management.Automation.PSCredential($userUPN, $securePass)
+    
+ #Join the Ec2 instance in domain
+
+            Add-Computer -DomainName $domain -Credential $adminCreds
+}
+catch
+{
+    Write-Output $_.Exception.Message
+	#Send-MailMessage -To $AlertRecipients -From $From -Subject $Subject -Body "$($_.Exception.Message)" -SmtpServer "hcfemail" -BodyAsHtml
+	#exit 1
+}
+finally 
+{
+Restart-Computer
+}
